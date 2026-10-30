@@ -1,41 +1,31 @@
 # =====================================================================================
 # VetSen-BR — config base do pytorch-segmentation-models-trainer (PSMT / Hydra).
-# Adaptado do train_sem_sombras_de_nuvem.yaml do OLD_IP. Rodar a partir da RAIZ do repo:
+# Estrutura espelhada dos configs reais do OLD_IP (loss via grupo `loss`, seed top-level,
+# JaccardIndex, band-stats do v2). Rodar da RAIZ do repo:
 #     pytorch-smt --config-dir configs --config-name base_vetsenbr <overrides...>
-#
-# OVERRIDES por run (sweep): paths.ds_root, variant, fold, seed, run_name,
-#   model._target_ (Unet|DeepLabV3Plus) e o bloco `loss` (ver scripts/run1_loss_screen.sh).
-# ⚠️ Antes do sweep completo: 1 DRY-RUN (hyperparameters.epochs=1) p/ validar paths/seed/loss.
+# OVERRIDES por run: paths.ds_root, variant, fold, seed, model._target_, loss=<nome>.
+# ⚠️ 1 DRY-RUN antes do sweep:  ... hyperparameters.epochs=1
 # =====================================================================================
+defaults:
+  - loss: dice_focal          # <-- grupo de loss (configs/loss/); OVERRIDE: loss=dice_ce|dice|focal|ce|weighted_ce
+  - _self_
 
 paths:
-  repo: ${hydra:runtime.cwd}                       # raiz do repo (de onde você chama o pytorch-smt)
-  ds_root: /ABSOLUTE/PATH/TO/dataset_no_SSD        # <-- OVERRIDE na 5090 (dir com images/ e labels/)
-variant: forest_nonforest                          # <-- OVERRIDE: forest_nonforest | natural_cultivated
-fold: 0                                            # <-- OVERRIDE: 0..4
-seed: 42                                           # <-- OVERRIDE: 42,43,44
+  repo: ${hydra:runtime.cwd}
+  ds_root: /ABSOLUTE/PATH/TO/dataset_no_SSD     # <-- OVERRIDE na 5090 (dir com images/ e labels/)
+variant: forest_nonforest                       # <-- OVERRIDE: forest_nonforest | natural_cultivated
+fold: 0                                          # <-- OVERRIDE: 0..4
+seed: 42                                         # <-- OVERRIDE: 42,43,44
 run_name: ${variant}_fold${fold}_seed${seed}
+deterministic_cudnn: true                        # reprodutibilidade (ver README p/ ressalva cross-GPU)
 
 model:
-  _target_: segmentation_models_pytorch.Unet       # <-- OVERRIDE p/ DeepLabV3Plus
+  _target_: segmentation_models_pytorch.Unet     # <-- OVERRIDE p/ DeepLabV3Plus
   encoder_name: resnet101
-  encoder_weights: null                            # do zero (10 bandas != ImageNet de 3)
+  encoder_weights: null                          # do zero (10 bandas != ImageNet de 3)
   in_channels: 10
-  classes: 6                                        # canais 0..5 (0=NoData ignorado) -> 5 classes reais
+  classes: ${hyperparameters.classes}            # 6 canais (0=NoData ignorado) -> 5 classes reais
   activation: null
-
-# --- LOSS: default = Dice+CE ponderado. Para a ablação, o sweep SOBRESCREVE este bloco. ---
-#   Vencedor esperado = Dice+Focal. As losses puras/combinadas da sua ablação (dice_focal,
-#   focal_pura, dice_pura, ce_pura, weighted_ce) vieram da SUA configuração — coloque-as em
-#   configs/loss/*.yaml (ver README). O repo PSMT traz: WeightedDiceCrossEntropyLoss,
-#   WeightedDiceSCELoss, WeightedJMLSCELoss, WeightedLovaszSCELoss, WeightedJMLSCEGCBLLoss.
-loss:
-  _target_: pytorch_segmentation_models_trainer.custom_losses.loss.WeightedDiceCrossEntropyLoss
-  num_classes: ${model.classes}
-  dice_weight: 0.25
-  ce_weight: 0.75
-  smooth_factor: 0.1
-  ignore_index: 0
 
 optimizer:
   _target_: torch.optim.AdamW
@@ -64,41 +54,40 @@ pl_trainer:
   max_epochs: ${hyperparameters.epochs}
   accelerator: auto
   devices: 1
-  precision: 16-mixed          # 5090: pode trocar p/ bf16-mixed (mais estável)
-  deterministic: true          # reprodutibilidade (ver README p/ ressalva cross-GPU)
+  precision: 16-mixed          # 5090: pode trocar p/ bf16-mixed
   log_every_n_steps: 50
 
 metrics:
-  - _target_: pytorch_segmentation_models_trainer.custom_metrics.metrics.IoU
+  - _target_: torchmetrics.JaccardIndex
     task: multiclass
-    num_classes: ${model.classes}
+    num_classes: ${hyperparameters.classes}
     average: macro
     ignore_index: 0
   - _target_: torchmetrics.Accuracy
     task: multiclass
-    num_classes: ${model.classes}
+    num_classes: ${hyperparameters.classes}
     average: macro
     ignore_index: 0
   - _target_: torchmetrics.F1Score
     task: multiclass
-    num_classes: ${model.classes}
+    num_classes: ${hyperparameters.classes}
     average: macro
     ignore_index: 0
   - _target_: torchmetrics.Precision
     task: multiclass
-    num_classes: ${model.classes}
+    num_classes: ${hyperparameters.classes}
     average: macro
     ignore_index: 0
   - _target_: torchmetrics.Recall
     task: multiclass
-    num_classes: ${model.classes}
+    num_classes: ${hyperparameters.classes}
     average: macro
     ignore_index: 0
 
 logger:
-  _target_: pytorch_lightning.loggers.TensorBoardLogger
-  save_dir: ${paths.repo}/experiments
-  name: ${run_name}
+  - _target_: pytorch_lightning.loggers.TensorBoardLogger
+    save_dir: ${paths.repo}/experiments
+    name: ${run_name}
 
 callbacks:
   - _target_: pytorch_lightning.callbacks.ModelCheckpoint
@@ -121,7 +110,8 @@ train_dataset:
   _target_: pytorch_segmentation_models_trainer.dataset_loader.dataset.SegmentationDataset
   input_csv_path: ${paths.repo}/splits/csv/${variant}/fold${fold}/train.csv
   root_dir: ${paths.ds_root}
-  n_classes: ${model.classes}
+  seed: ${seed}
+  n_classes: ${hyperparameters.classes}
   use_rasterio: true
   selected_bands: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
   image_dtype: uint16
@@ -136,16 +126,16 @@ train_dataset:
       brightness_limit: 0.2
       contrast_limit: 0.2
       p: 0.5
-    # ⚠️ mean/std ABAIXO são placeholders do OLD dataset — RECOMPUTE no v2 (ver README).
-    - _target_: albumentations.Normalize
-      mean: [0.0209820822, 0.0248843540, 0.0244065672, 0.0571240889, 0.0321369776, 0.0498657520, 0.0559803922, 0.0598589200, 0.0477660522, 0.0343592989]
-      std:  [0.0043009065, 0.0049566506, 0.0068262993, 0.0129290984, 0.0069484436, 0.0097427442, 0.0119932305, 0.0125724650, 0.0120805223, 0.0106294565]
+    - _target_: albumentations.Normalize       # band-stats do v2 (fold0 train)
+      mean: [0.0208715491, 0.0247224415, 0.0242678381, 0.0572190252, 0.0319862518, 0.0497867143, 0.0559130301, 0.0598915270, 0.0474376619, 0.0341626577]
+      std:  [0.0035330470, 0.0044250744, 0.0065720701, 0.0122402719, 0.0065554389, 0.0091417916, 0.0112963106, 0.0119422322, 0.0121495596, 0.0106267517]
       max_pixel_value: 1.0
     - _target_: albumentations.pytorch.ToTensorV2
   data_loader:
     shuffle: true
-    num_workers: 12
+    num_workers: 16
     pin_memory: true
+    persistent_workers: true
     batch_size: ${hyperparameters.batch_size}
     drop_last: true
 
@@ -153,7 +143,8 @@ val_dataset:
   _target_: pytorch_segmentation_models_trainer.dataset_loader.dataset.SegmentationDataset
   input_csv_path: ${paths.repo}/splits/csv/${variant}/fold${fold}/val.csv
   root_dir: ${paths.ds_root}
-  n_classes: ${model.classes}
+  seed: ${seed}
+  n_classes: ${hyperparameters.classes}
   use_rasterio: true
   selected_bands: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
   image_dtype: uint16
@@ -161,14 +152,15 @@ val_dataset:
     - _target_: albumentations.ToFloat
       max_value: 65535.0
     - _target_: albumentations.Normalize
-      mean: [0.0209820822, 0.0248843540, 0.0244065672, 0.0571240889, 0.0321369776, 0.0498657520, 0.0559803922, 0.0598589200, 0.0477660522, 0.0343592989]
-      std:  [0.0043009065, 0.0049566506, 0.0068262993, 0.0129290984, 0.0069484436, 0.0097427442, 0.0119932305, 0.0125724650, 0.0120805223, 0.0106294565]
+      mean: [0.0208715491, 0.0247224415, 0.0242678381, 0.0572190252, 0.0319862518, 0.0497867143, 0.0559130301, 0.0598915270, 0.0474376619, 0.0341626577]
+      std:  [0.0035330470, 0.0044250744, 0.0065720701, 0.0122402719, 0.0065554389, 0.0091417916, 0.0112963106, 0.0119422322, 0.0121495596, 0.0106267517]
       max_pixel_value: 1.0
     - _target_: albumentations.pytorch.ToTensorV2
   data_loader:
     shuffle: false
-    num_workers: 12
+    num_workers: 16
     pin_memory: true
+    persistent_workers: true
     batch_size: ${hyperparameters.batch_size}
     drop_last: false
 

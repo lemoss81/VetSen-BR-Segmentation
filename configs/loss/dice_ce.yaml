@@ -1,0 +1,9 @@
+# @package _global_
+# 0,25·Dice + 0,75·CE (label smoothing 0,1)  — config-base histórico
+loss:
+  _target_: pytorch_segmentation_models_trainer.custom_losses.loss.WeightedDiceCrossEntropyLoss
+  num_classes: ${hyperparameters.classes}
+  dice_weight: 0.25
+  ce_weight: 0.75
+  smooth_factor: 0.1
+  ignore_index: 0

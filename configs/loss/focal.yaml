@@ -1,0 +1,11 @@
+# @package _global_
+# Focal puro (gamma=2)
+loss_params:
+  compound_loss:
+    normalize_losses: false
+    losses:
+      - loss:
+          _target_: segmentation_models_pytorch.losses.FocalLoss
+          mode: multiclass
+          ignore_index: 0
+        weight: 1.0

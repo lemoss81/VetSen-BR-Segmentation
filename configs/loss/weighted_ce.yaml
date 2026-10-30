@@ -1,0 +1,13 @@
+# @package _global_
+# CE ponderada (label smoothing 0,1) — pesos = inverso da raiz da frequência, normalizados.
+# class_weights = [NoData, Water, Built-up, veg3, veg4, Bare Soil]  (6 canais; idx0 ignorado).
+# Valores abaixo = forest_nonforest (usado na RUN 1, que é forest_nonforest).
+#   natural_cultivated:  [1.0, 1.1959, 0.8501, 0.2198, 0.2706, 2.4637]  <-- troque se rodar em NC
+loss:
+  _target_: pytorch_segmentation_models_trainer.custom_losses.loss.WeightedDiceCrossEntropyLoss
+  num_classes: ${hyperparameters.classes}
+  dice_weight: 0.0
+  ce_weight: 1.0
+  smooth_factor: 0.1
+  ignore_index: 0
+  class_weights: [1.0, 1.1932, 0.8482, 0.2905, 0.2100, 2.4582]

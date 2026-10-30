@@ -12,13 +12,7 @@ VARIANT=forest_nonforest
 LOSSES=(dice_focal dice weighted_ce)      # top-3 do histórico (reconfirmar sob o split novo)
 ARCHS=(Unet DeepLabV3Plus)
 
-# >>> AJUSTE AQUI: override Hydra do bloco `loss` para cada nome <<<
-# (coloque suas configs em configs/loss/<nome>.yaml e use `loss=<nome>`, OU um override inline)
-declare -A LOSS_OVERRIDE
-LOSS_OVERRIDE[dice_focal]="loss=dice_focal"
-LOSS_OVERRIDE[dice]="loss=dice"
-LOSS_OVERRIDE[weighted_ce]="loss=weighted_ce"
-
+# loss = grupo Hydra (configs/loss/<nome>.yaml): dice_focal, dice, focal, dice_ce, ce, weighted_ce
 for lname in "${LOSSES[@]}"; do
   for arch in "${ARCHS[@]}"; do
     for f in 0 1 2 3 4; do
@@ -26,7 +20,7 @@ for lname in "${LOSSES[@]}"; do
       pytorch-smt --config-dir configs --config-name base_vetsenbr \
         paths.ds_root="$DS_ROOT" variant=$VARIANT fold=$f seed=$SEED \
         model._target_=segmentation_models_pytorch.$arch \
-        ${LOSS_OVERRIDE[$lname]} \
+        loss=$lname \
         run_name="r1_${lname}_${arch}_fold${f}_seed${SEED}"
     done
   done

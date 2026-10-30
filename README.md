@@ -47,8 +47,9 @@ pixi install
 pixi run python data_prep/rename_dataset.py --root <DS_ROOT>
 pixi run python data_prep/rename_dataset.py --root <DS_ROOT> --apply
 # 2) recomputar a normalização por banda NO v2 (NÃO use a do OLD):
-pixi run python compute_band_stats.py --csv splits/csv/forest_nonforest/fold0/train.csv --root <DS_ROOT> --out train_band_stats_v2.json
-#    -> copie mean/std para configs/base_vetsenbr.yaml (blocos Normalize de train e val)
+pixi run python compute_band_stats.py --csv splits/csv/forest_nonforest/fold0/train.csv --root-dir <DS_ROOT> --scale-max 65535 --output-json train_band_stats_v2.json
+#    -> copie "mean_scaled_list" e "std_scaled_list" do JSON para configs/base_vetsenbr.yaml
+#       (blocos Normalize de train e val, campos mean/std)
 ```
 *(os CSVs já estão versionados em `splits/csv/` — não precisa regerar; se quiser, `python data_prep/make_csv_from_folds.py`.)*
 

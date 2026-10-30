@@ -12,11 +12,6 @@ ARCHS=(Unet DeepLabV3Plus)
 VARIANTS=(forest_nonforest natural_cultivated)
 SEEDS=(42 43 44)
 
-declare -A LOSS_OVERRIDE
-LOSS_OVERRIDE[dice_focal]="loss=dice_focal"
-LOSS_OVERRIDE[dice]="loss=dice"
-LOSS_OVERRIDE[weighted_ce]="loss=weighted_ce"
-
 for arch in "${ARCHS[@]}"; do
   for v in "${VARIANTS[@]}"; do
     for f in 0 1 2 3 4; do
@@ -25,7 +20,7 @@ for arch in "${ARCHS[@]}"; do
         pytorch-smt --config-dir configs --config-name base_vetsenbr \
           paths.ds_root="$DS_ROOT" variant=$v fold=$f seed=$s \
           model._target_=segmentation_models_pytorch.$arch \
-          ${LOSS_OVERRIDE[$WIN_LOSS]} \
+          loss=$WIN_LOSS \
           run_name="r2_${arch}_${v}_fold${f}_seed${s}"
       done
     done
