@@ -1,5 +1,5 @@
 # @package _global_
-# Focal puro (gamma=2)
+# Focal only (gamma=2)
 loss_params:
   compound_loss:
     normalize_losses: false

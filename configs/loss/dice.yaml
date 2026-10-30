@@ -1,5 +1,5 @@
 # @package _global_
-# Dice puro
+# Dice only
 loss_params:
   compound_loss:
     normalize_losses: false

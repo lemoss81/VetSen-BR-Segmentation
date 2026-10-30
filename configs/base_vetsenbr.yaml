@@ -1,30 +1,29 @@
 # =====================================================================================
-# VetSen-BR — config base do pytorch-segmentation-models-trainer (PSMT / Hydra).
-# Estrutura espelhada dos configs reais do OLD_IP (loss via grupo `loss`, seed top-level,
-# JaccardIndex, band-stats do v2). Rodar da RAIZ do repo:
+# VetSen-BR — base config for pytorch-segmentation-models-trainer (PSMT / Hydra).
+# Run from the repo ROOT:
 #     pytorch-smt --config-dir configs --config-name base_vetsenbr <overrides...>
-# OVERRIDES por run: paths.ds_root, variant, fold, seed, model._target_, loss=<nome>.
-# ⚠️ 1 DRY-RUN antes do sweep:  ... hyperparameters.epochs=1
+# Per-run overrides: paths.ds_root, variant, fold, seed, model._target_, loss=<name>.
+# Run a 1-epoch DRY-RUN before any sweep:  ... hyperparameters.epochs=1
 # =====================================================================================
 defaults:
-  - loss: dice_focal          # <-- grupo de loss (configs/loss/); OVERRIDE: loss=dice_ce|dice|focal|ce|weighted_ce
+  - loss: dice_focal          # loss group (configs/loss/); override: loss=dice_ce|dice|focal|ce|weighted_ce
   - _self_
 
 paths:
   repo: ${hydra:runtime.cwd}
-  ds_root: /ABSOLUTE/PATH/TO/dataset_no_SSD     # <-- OVERRIDE na 5090 (dir com images/ e labels/)
+  ds_root: /ABSOLUTE/PATH/TO/dataset            # <-- OVERRIDE (dir containing images/ and labels/)
 variant: forest_nonforest                       # <-- OVERRIDE: forest_nonforest | natural_cultivated
 fold: 0                                          # <-- OVERRIDE: 0..4
 seed: 42                                         # <-- OVERRIDE: 42,43,44
 run_name: ${variant}_fold${fold}_seed${seed}
-deterministic_cudnn: true                        # reprodutibilidade (ver README p/ ressalva cross-GPU)
+deterministic_cudnn: true                        # reproducibility (see README for the cross-GPU caveat)
 
 model:
-  _target_: segmentation_models_pytorch.Unet     # <-- OVERRIDE p/ DeepLabV3Plus
+  _target_: segmentation_models_pytorch.Unet     # <-- OVERRIDE to DeepLabV3Plus
   encoder_name: resnet101
-  encoder_weights: null                          # do zero (10 bandas != ImageNet de 3)
+  encoder_weights: null                          # from scratch (10 bands != 3-band ImageNet)
   in_channels: 10
-  classes: ${hyperparameters.classes}            # 6 canais (0=NoData ignorado) -> 5 classes reais
+  classes: ${hyperparameters.classes}            # 6 channels (0=NoData, ignored) -> 5 scored classes
   activation: null
 
 optimizer:
@@ -54,7 +53,7 @@ pl_trainer:
   max_epochs: ${hyperparameters.epochs}
   accelerator: auto
   devices: 1
-  precision: 16-mixed          # 5090: pode trocar p/ bf16-mixed
+  precision: 16-mixed          # 5090: can switch to bf16-mixed
   log_every_n_steps: 50
 
 metrics:
@@ -126,7 +125,7 @@ train_dataset:
       brightness_limit: 0.2
       contrast_limit: 0.2
       p: 0.5
-    - _target_: albumentations.Normalize       # band-stats do v2 (fold0 train)
+    - _target_: albumentations.Normalize       # per-band stats of VetSen-BR v2 (fold0 train)
       mean: [0.0208715491, 0.0247224415, 0.0242678381, 0.0572190252, 0.0319862518, 0.0497867143, 0.0559130301, 0.0598915270, 0.0474376619, 0.0341626577]
       std:  [0.0035330470, 0.0044250744, 0.0065720701, 0.0122402719, 0.0065554389, 0.0091417916, 0.0112963106, 0.0119422322, 0.0121495596, 0.0106267517]
       max_pixel_value: 1.0

@@ -1,5 +1,5 @@
 # @package _global_
-# 0,25·Dice + 0,75·Focal(gamma=2)  — a vencedora da ablação
+# 0.25*Dice + 0.75*Focal (gamma=2) — ablation winner
 loss_params:
   compound_loss:
     normalize_losses: false

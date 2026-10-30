@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # =============================================================================
-# RUN 2 — experimento principal (com a loss vencedora da RUN 1)
-#   2 arquiteturas × 2 variantes × K=5 folds × 3 sementes = 60 runs
-#   -> média±desvio sobre 15 (fold×seed) por célula; Wilcoxon entre variantes.
-#   Uso:  bash scripts/run2_main.sh /caminho/no/SSD/dataset dice_focal
+# RUN 2 — main experiment (with the winning loss from RUN 1)
+#   2 architectures x 2 variants x K=5 folds x 3 seeds = 60 runs
+#   -> mean+-std over 15 (fold x seed) per cell; Wilcoxon between variants.
+#   Usage:  bash scripts/run2_main.sh /path/to/dataset dice_focal
 # =============================================================================
 set -euo pipefail
-DS_ROOT="${1:?uso: run2_main.sh <DS_ROOT> <loss_vencedora>}"
-WIN_LOSS="${2:?informe a loss vencedora da RUN 1 (ex.: dice_focal)}"
+DS_ROOT="${1:?usage: run2_main.sh <DS_ROOT> <winning_loss>}"
+WIN_LOSS="${2:?provide the winning loss from RUN 1 (e.g. dice_focal)}"
 ARCHS=(Unet DeepLabV3Plus)
 VARIANTS=(forest_nonforest natural_cultivated)
 SEEDS=(42 43 44)
@@ -26,4 +26,4 @@ for arch in "${ARCHS[@]}"; do
     done
   done
 done
-echo "RUN 2 concluída. Agregue com: python scripts/aggregate_results.py --glob 'experiments/r2_*' --compare-variants"
+echo "RUN 2 done. Aggregate with: python scripts/aggregate_results.py --glob 'experiments/r2_*' --compare-variants"

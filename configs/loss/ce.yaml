@@ -1,5 +1,5 @@
 # @package _global_
-# CE pura (label smoothing 0,1), sem pesos de classe
+# CE only (label smoothing 0.1), no class weights
 loss:
   _target_: pytorch_segmentation_models_trainer.custom_losses.loss.WeightedDiceCrossEntropyLoss
   num_classes: ${hyperparameters.classes}
