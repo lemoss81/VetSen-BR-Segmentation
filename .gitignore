@@ -24,6 +24,10 @@ data/
 # Stats recomputados (gerar na máquina)
 train_band_stats*.json
 
+# Preparo auxiliar (uso único, roda local/no SSD — fora do git)
+data_prep/rename_dataset.py
+data_prep/build_catalog.py
+
 # SO / editor
 .DS_Store
 ._*
