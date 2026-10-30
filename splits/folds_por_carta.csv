@@ -1,0 +1,134 @@
+sheet_id,carta,bioma,n_patches,fold,has_water,has_built,has_bare
+s001,1,Cerrado,77,0,1,1,1
+s002,2,Cerrado,79,3,1,1,1
+s003,3,Cerrado,76,0,1,1,0
+s004,4,Cerrado,75,2,1,1,0
+s005,5,Cerrado,81,1,1,1,0
+s006,6,Mata Atlântica,25,4,0,1,1
+s007,7,Mata Atlântica,81,2,0,1,1
+s008,8,Cerrado,81,4,1,1,1
+s009,9,Amazônia,19,1,1,0,0
+s010,10,Amazônia,66,2,1,1,1
+s011,11,Mata Atlântica,21,3,1,0,0
+s012,12,Amazônia,64,3,1,0,1
+s013,13,Amazônia,25,2,1,0,1
+s014,14,Amazônia,67,0,1,0,0
+s015,15,Amazônia,58,3,1,0,1
+s016,16,Mata Atlântica,60,1,1,1,0
+s017,17,Mata Atlântica,74,2,1,1,1
+s018,18,Amazônia,12,4,1,0,0
+s019,19,Amazônia,73,4,1,0,0
+s020,20,Cerrado,78,1,1,1,1
+s021,21,Mata Atlântica,79,2,1,1,1
+s022,22,Mata Atlântica,75,4,0,1,1
+s023,23,Mata Atlântica,102,1,1,1,0
+s024,24,Mata Atlântica,100,2,1,1,1
+s025,25,Mata Atlântica,80,2,1,1,1
+s026,26,Amazônia,67,1,1,1,0
+s027,27,Mata Atlântica,77,3,1,1,1
+s028,28,Mata Atlântica,72,4,1,1,1
+s029,29,Cerrado,79,0,1,1,1
+s030,30,Mata Atlântica,93,4,1,1,1
+s031,31,Amazônia,31,3,1,1,1
+s032,32,Cerrado,79,2,1,1,0
+s033,33,Cerrado,80,3,1,1,1
+s034,34,Mata Atlântica,81,3,1,1,1
+s035,35,Amazônia,42,4,1,0,1
+s036,36,Amazônia,34,4,1,0,1
+s037,37,Mata Atlântica,81,2,1,1,1
+s038,38,Cerrado,79,1,1,1,1
+s039,39,Mata Atlântica,66,3,1,1,0
+s040,40,Cerrado,81,0,1,1,1
+s041,41,Mata Atlântica,108,0,1,1,1
+s042,42,Mata Atlântica,81,0,1,1,1
+s043,43,Mata Atlântica,107,2,1,1,1
+s044,44,Amazônia,58,2,1,1,1
+s045,45,Amazônia,1,2,1,0,0
+s046,46,Cerrado,80,2,1,1,0
+s047,47,Mata Atlântica,80,0,1,1,0
+s048,48,Cerrado,40,2,1,1,0
+s049,49,Mata Atlântica,81,1,1,1,1
+s050,50,Cerrado,78,4,1,1,1
+s051,51,Cerrado,2,4,1,1,1
+s052,52,Mata Atlântica,81,4,1,1,0
+s053,53,Amazônia,79,4,1,1,0
+s054,54,Mata Atlântica,69,0,1,1,1
+s055,55,Cerrado,79,4,1,0,1
+s056,56,Cerrado,107,2,1,1,1
+s057,57,Amazônia,58,0,1,1,0
+s058,58,Cerrado,77,2,1,1,1
+s059,59,Mata Atlântica,71,4,1,1,0
+s060,60,Cerrado,53,3,1,1,0
+s061,61,Cerrado,76,3,1,1,0
+s062,62,Cerrado,77,1,1,1,0
+s063,63,Mata Atlântica,75,3,1,1,0
+s064,64,Cerrado,71,4,1,1,0
+s065,65,Mata Atlântica,79,0,1,1,1
+s066,66,Cerrado,78,3,1,0,0
+s067,67,Cerrado,14,3,1,1,0
+s068,68,Amazônia,10,0,1,0,0
+s069,69,Mata Atlântica,81,3,1,1,1
+s070,70,Mata Atlântica,93,3,1,1,0
+s071,71,Mata Atlântica,123,3,1,1,1
+s072,72,Mata Atlântica,85,1,1,1,0
+s073,73,Mata Atlântica,73,0,1,1,1
+s074,74,Mata Atlântica,77,2,1,1,1
+s075,75,Mata Atlântica,51,3,1,1,0
+s076,76,Mata Atlântica,77,0,1,1,1
+s077,77,Mata Atlântica,52,2,1,1,1
+s078,78,Mata Atlântica,56,0,1,1,0
+s079,79,Mata Atlântica,80,1,1,1,1
+s080,80,Cerrado,27,2,1,1,0
+s081,81,Mata Atlântica,72,1,1,1,0
+s082,82,Amazônia,81,0,1,1,0
+s083,83,Mata Atlântica,78,2,1,0,0
+s084,84,Mata Atlântica,72,3,1,1,0
+s085,85,Cerrado,75,1,1,1,1
+s086,86,Amazônia,81,1,1,1,0
+s087,87,Cerrado,77,4,1,1,0
+s088,88,Cerrado,80,1,1,1,1
+s089,89,Mata Atlântica,67,1,1,1,0
+s090,90,Amazônia,81,2,1,1,0
+s091,91,Amazônia,81,3,0,1,0
+s092,92,Mata Atlântica,42,4,1,1,0
+s093,93,Cerrado,94,3,1,0,0
+s094,94,Mata Atlântica,69,2,1,1,0
+s095,95,Mata Atlântica,78,0,1,1,1
+s096,96,Mata Atlântica,20,2,1,1,0
+s097,97,Pampa,71,2,1,1,1
+s098,98,Pampa,90,1,1,0,0
+s099,99,Pampa,70,1,1,0,1
+s100,100,Pampa,71,2,1,1,0
+s101,101,Pampa,98,0,1,0,1
+s102,102,Mata Atlântica,99,0,1,1,0
+s103,103,Pampa,71,3,1,0,0
+s104,104,Pampa,72,3,1,1,0
+s105,105,Pampa,71,4,1,1,0
+s106,106,Pampa,72,4,1,0,1
+s107,107,Cerrado,79,3,1,1,0
+s108,108,Cerrado,80,4,0,0,0
+s109,109,Cerrado,79,0,1,0,0
+s110,110,Pantanal,49,4,1,1,0
+s111,111,Cerrado,93,0,1,1,0
+s112,112,Cerrado,85,4,1,0,0
+s113,113,Pantanal,81,0,1,0,0
+s114,114,Cerrado,67,0,1,0,1
+s115,115,Cerrado,79,2,1,0,0
+s116,116,Pantanal,79,3,1,0,1
+s117,117,Cerrado,84,1,0,0,0
+s118,118,Amazônia,43,1,1,1,0
+s119,119,Amazônia,37,1,1,1,0
+s120,120,Amazônia,23,0,1,1,0
+s121,121,Amazônia,1,2,1,1,0
+s122,122,Mata Atlântica,79,1,1,1,1
+s123,123,Mata Atlântica,82,0,1,1,1
+s124,124,Mata Atlântica,90,4,1,1,1
+s125,125,Mata Atlântica,80,4,1,1,1
+s126,126,Mata Atlântica,103,1,1,1,1
+s127,127,Mata Atlântica,78,1,1,1,1
+s128,128,Mata Atlântica,79,4,1,1,1
+s129,129,Mata Atlântica,78,4,1,1,1
+s130,130,Mata Atlântica,77,1,1,1,1
+s131,131,Mata Atlântica,80,3,1,1,1
+s132,132,Mata Atlântica,108,4,1,1,1
+s133,133,Mata Atlântica,79,3,1,1,1

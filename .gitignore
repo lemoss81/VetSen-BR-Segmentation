@@ -1,0 +1,33 @@
+# Ambiente / caches
+.pixi/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# Saídas de treino (não versionar)
+experiments/
+outputs/
+checkpoints/
+multirun/
+*.ckpt
+lightning_logs/
+tb_logs/
+
+# Dados (ficam no SSD, NUNCA no git)
+*.tif
+*.tiff
+*.jp2
+*.zip
+dataset/
+data/
+
+# Stats recomputados (gerar na máquina)
+train_band_stats*.json
+
+# SO / editor
+.DS_Store
+._*
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/

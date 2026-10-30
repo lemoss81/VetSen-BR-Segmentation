@@ -1,0 +1,38 @@
+[workspace]
+name = "VetSen-BR-Segmentation"
+version = "0.1.0"
+channels = ["conda-forge"]
+platforms = ["win-64", "linux-64"]
+
+[system-requirements]
+cuda = "12.0"
+
+[dependencies]
+python = "3.12.*"
+matplotlib = "*"
+seaborn = "*"
+scikit-learn = "*"
+scipy = "*"
+geopandas = "*"
+rasterio = ">=1.5,<2"
+# PyTorch — ⚠️ RTX 5090 (Blackwell) exige build com CUDA 12.8+ (cu128).
+#   O pytorch-gpu do conda-forge pode NÃO suportar Blackwell. Se a GPU não for
+#   reconhecida, remova estas 3 linhas e instale via pip:
+#     pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+pytorch = "*"
+torchvision = "*"
+pytorch-gpu = "*"
+
+[pypi-dependencies]
+# Framework de treino (repo oficial da DSG)
+pytorch-segmentation-models-trainer = { git = "https://github.com/dsgoficial/pytorch_segmentation_models_trainer.git" }
+hydra-core = ">=1.3.2,<2"
+omegaconf = ">=2.3,<3"
+pytorch-lightning = ">=2.6,<3"
+segmentation-models-pytorch = ">=0.5,<0.6"
+torchmetrics = ">=1.9,<2"
+kornia = ">=0.8,<0.9"
+albumentations = ">=2.0,<3"
+
+[activation.env]
+PYTHONNOUSERSITE = "1"
