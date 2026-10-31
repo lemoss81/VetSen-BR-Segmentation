@@ -4,7 +4,7 @@
 # Values below are for forest_nonforest (used in RUN 1).
 #   natural_cultivated:  [1.0, 1.1959, 0.8501, 0.2198, 0.2706, 2.4637]  <-- swap if running on NC
 loss:
-  _target_: pytorch_segmentation_models_trainer.custom_losses.loss.WeightedDiceCrossEntropyLoss
+  _target_: custom_losses.weighted_dice_ce.WeightedDiceCrossEntropyLoss   # vendored (public pkg lacks class_weights)
   num_classes: ${hyperparameters.classes}
   dice_weight: 0.0
   ce_weight: 1.0

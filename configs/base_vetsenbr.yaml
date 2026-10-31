@@ -55,6 +55,11 @@ pl_trainer:
   devices: 1
   precision: 16-mixed          # 5090: can switch to bf16-mixed
   log_every_n_steps: 50
+  # "warn" (not true): train.py does setdefault("deterministic", True) when
+  # deterministic_cudnn=true, so this pre-set value is respected. Strict True crashes
+  # weighted_ce (per-class CE weight has no deterministic CUDA kernel for nll_loss2d);
+  # "warn" keeps everything else deterministic and only relaxes that one op.
+  deterministic: warn
 
 metrics:
   - _target_: torchmetrics.JaccardIndex
@@ -87,6 +92,11 @@ logger:
   - _target_: pytorch_lightning.loggers.TensorBoardLogger
     save_dir: ${paths.repo}/experiments
     name: ${run_name}
+  - _target_: pytorch_lightning.loggers.WandbLogger   # optional; run `wandb login` first (uses your default entity)
+    project: vetsenbr-segmentation-benchmark
+    name: ${run_name}
+    save_dir: ${paths.repo}/experiments
+    log_model: false
 
 callbacks:
   - _target_: pytorch_lightning.callbacks.ModelCheckpoint

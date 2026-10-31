@@ -1,0 +1,12 @@
+# @package _global_
+# Weighted CE for the natural_cultivated variant (class_weights for NC classes).
+# Same as weighted_ce.yaml but with the Natural/Cultivated weights.
+# class_weights = [NoData, Water, Built-up, Natural, Cultivated, Bare Soil]  (6 channels; idx0 ignored).
+loss:
+  _target_: custom_losses.weighted_dice_ce.WeightedDiceCrossEntropyLoss   # vendored (public pkg lacks class_weights)
+  num_classes: ${hyperparameters.classes}
+  dice_weight: 0.0
+  ce_weight: 1.0
+  smooth_factor: 0.1
+  ignore_index: 0
+  class_weights: [1.0, 1.1959, 0.8501, 0.2198, 0.2706, 2.4637]

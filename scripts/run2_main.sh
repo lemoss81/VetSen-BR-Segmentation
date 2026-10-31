@@ -6,6 +6,7 @@
 #   Usage:  bash scripts/run2_main.sh /path/to/dataset dice_focal
 # =============================================================================
 set -euo pipefail
+export PYTHONPATH=.    # so Hydra can resolve custom_losses.* (vendored WeightedDiceCrossEntropyLoss)
 DS_ROOT="${1:?usage: run2_main.sh <DS_ROOT> <winning_loss>}"
 WIN_LOSS="${2:?provide the winning loss from RUN 1 (e.g. dice_focal)}"
 ARCHS=(Unet DeepLabV3Plus)
@@ -16,11 +17,14 @@ for arch in "${ARCHS[@]}"; do
   for v in "${VARIANTS[@]}"; do
     for f in 0 1 2 3 4; do
       for s in "${SEEDS[@]}"; do
-        echo ">>> arch=$arch variant=$v fold=$f seed=$s loss=$WIN_LOSS"
+        # weighted_ce has per-variant class weights: use the NC config on natural_cultivated
+        LOSS_ARG=$WIN_LOSS
+        if [ "$WIN_LOSS" = "weighted_ce" ] && [ "$v" = "natural_cultivated" ]; then LOSS_ARG=weighted_ce_nc; fi
+        echo ">>> arch=$arch variant=$v fold=$f seed=$s loss=$LOSS_ARG"
         pytorch-smt --config-dir configs --config-name base_vetsenbr \
           paths.ds_root="$DS_ROOT" variant=$v fold=$f seed=$s \
           model._target_=segmentation_models_pytorch.$arch \
-          loss=$WIN_LOSS \
+          loss=$LOSS_ARG \
           run_name="r2_${arch}_${v}_fold${f}_seed${s}"
       done
     done

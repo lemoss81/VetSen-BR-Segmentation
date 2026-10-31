@@ -7,6 +7,7 @@ __pycache__/
 # Saídas de treino (não versionar)
 experiments/
 outputs/
+wandb/
 checkpoints/
 multirun/
 *.ckpt

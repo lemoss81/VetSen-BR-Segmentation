@@ -6,6 +6,7 @@
 #   Usage:  bash scripts/run1_loss_screen.sh /path/to/dataset
 # =============================================================================
 set -euo pipefail
+export PYTHONPATH=.    # so Hydra can resolve custom_losses.* (vendored WeightedDiceCrossEntropyLoss)
 DS_ROOT="${1:?usage: run1_loss_screen.sh <DS_ROOT>}"
 SEED=42
 VARIANT=forest_nonforest
