@@ -94,10 +94,10 @@ so results are reported as mean ± standard deviation over folds and seeds.
 If you use VetSen-BR, please cite:
 
 ```bibtex
-@article{vetsenbr,
-  title   = {VetSen-BR: a Sentinel-2 benchmark for land-cover segmentation labeled with topographic charts},
-  author  = {...},
-  journal = {...},
-  year    = {...}
+@misc{vetsenbr,
+title = {VetSen-BR: a Sentinel-2 semantic-segmentation benchmark for Brazil},
+author = {Mateus L. de Abrantes and André L. Favalessa and Maurício C. M. de Paulo and Felipe Ferrari and Raphael L. F. Greco and Philipe Borba and Daniel R. dos Santos},
+year = {2026},
+note = {https://www.kaggle.com/datasets/datasetbr1/vetsen-br}
 }
 ```
