@@ -28,7 +28,7 @@ model:
 
 optimizer:
   _target_: torch.optim.AdamW
-  lr: 0.0001
+  lr: 1.6e-4  # auto-atualizado apos sweep_lr_bs128 -- vencedor: 1.6e-4 (mIoU_val=0.5048)
   weight_decay: 0.0001
   eps: 1.0e-8
 
@@ -45,7 +45,7 @@ scheduler_list:
     name: plateau_lr
 
 hyperparameters:
-  batch_size: 24
+  batch_size: 128  # auto-atualizado apos sweep_lr_bs128 (venceu 128 por VRAM/utilizacao)
   epochs: 300
   classes: 6
 
@@ -142,7 +142,7 @@ train_dataset:
     - _target_: albumentations.pytorch.ToTensorV2
   data_loader:
     shuffle: true
-    num_workers: 16
+    num_workers: 10  # medido na Run 1: 8 workers = 34 s/epoca e sem erro 1455; 16 = 40 s/epoca e caiu na epoca 94
     pin_memory: true
     persistent_workers: true
     batch_size: ${hyperparameters.batch_size}
@@ -167,7 +167,7 @@ val_dataset:
     - _target_: albumentations.pytorch.ToTensorV2
   data_loader:
     shuffle: false
-    num_workers: 16
+    num_workers: 8  # medido na Run 1: 8 workers = 34 s/epoca e sem erro 1455; 16 = 40 s/epoca e caiu na epoca 94
     pin_memory: true
     persistent_workers: true
     batch_size: ${hyperparameters.batch_size}

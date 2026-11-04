@@ -10,19 +10,41 @@ export PYTHONPATH=.    # so Hydra can resolve custom_losses.* (vendored Weighted
 DS_ROOT="${1:?usage: run1_loss_screen.sh <DS_ROOT>}"
 SEED=42
 VARIANT=forest_nonforest
-LOSSES=(dice_focal dice weighted_ce)      # top-3 to re-confirm under the new split
+# top-3 to re-confirm under the new split; LOSSES_OVERRIDE="focal" roda so outras losses (ex.: focal pura)
+read -ra LOSSES <<< "${LOSSES_OVERRIDE:-dice_focal dice weighted_ce}"
 ARCHS=(Unet DeepLabV3Plus)
 
 # loss = Hydra group (configs/loss/<name>.yaml): dice_focal, dice, focal, dice_ce, ce, weighted_ce
 for lname in "${LOSSES[@]}"; do
   for arch in "${ARCHS[@]}"; do
     for f in 0 1 2 3 4; do
+      RN="r1_${lname}_${arch}_fold${f}_seed${SEED}"
+      # Retomada: pula runs que ja terminaram (final_metrics.json existe), para poder
+      # reiniciar o script sem refazer o que esta pronto.
+      if compgen -G "experiments/$RN/version_*/final_metrics.json" > /dev/null; then
+        echo ">>> JA CONCLUIDA, pulando: $RN"
+        continue
+      fi
       echo ">>> loss=$lname arch=$arch fold=$f seed=$SEED"
-      pytorch-smt --config-dir configs --config-name base_vetsenbr \
+      if ! pytorch-smt --config-dir configs --config-name base_vetsenbr \
         paths.ds_root="$DS_ROOT" variant=$VARIANT fold=$f seed=$SEED \
         model._target_=segmentation_models_pytorch.$arch \
         loss=$lname \
-        run_name="r1_${lname}_${arch}_fold${f}_seed${SEED}"
+        run_name="$RN"; then
+        # Rodada sem supervisao: no Windows, batch grande + muitos workers persistentes pode
+        # derrubar o treino com 'Couldn't open shared file mapping ... error code 1455'
+        # (visto no OLD_IP por volta das epocas 22-29). Guarda a tentativa que falhou fora do
+        # padrao r1_* e repete UMA vez com num_workers=8 (nao altera o protocolo estatistico);
+        # se a repeticao tambem falhar, o 'set -e' interrompe a cadeia.
+        echo "!!! $RN falhou -- guardando a tentativa e repetindo 1x com num_workers=8"
+        mv "experiments/$RN" "experiments/_falhou_${RN}_$(date +%s)" 2>/dev/null || true
+        pytorch-smt --config-dir configs --config-name base_vetsenbr \
+          paths.ds_root="$DS_ROOT" variant=$VARIANT fold=$f seed=$SEED \
+          model._target_=segmentation_models_pytorch.$arch \
+          loss=$lname \
+          train_dataset.data_loader.num_workers=8 val_dataset.data_loader.num_workers=8 \
+          run_name="$RN"
+      fi
     done
   done
 done
