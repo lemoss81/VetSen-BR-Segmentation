@@ -137,7 +137,7 @@ def main():
                 valid = y != 0                                  # NoData fora, como ignore_index=0
                 idx = y[valid] * n_classes + pred[valid]
                 cm += torch.bincount(idx, minlength=n_classes ** 2).view(n_classes, n_classes)
-        res = {k: float(v.compute()) for k, v in macro.items()}
+        tm_macro = {k: float(v.compute()) for k, v in macro.items()}   # macro do torchmetrics (referencia)
         # metricas por classe (1..5) a partir da matriz de confusao acumulada globalmente
         tp = cm.diag().double()
         fn = cm.sum(1).double() - tp
@@ -145,14 +145,21 @@ def main():
         div = lambda a, b: torch.where(b > 0, a / b.clamp(min=1), torch.zeros_like(a))
         per = {"iou_class": div(tp, tp + fp + fn), "f1_class": div(2 * tp, 2 * tp + fp + fn),
                "precision_class": div(tp, tp + fp), "recall_class": div(tp, tp + fn)}
+        # macro = mean over the REAL classes present in the target (1..5), excluding NoData (class 0).
+        # Fixes the torchmetrics artifact that counts class 0 in the denominator whenever the model
+        # predicts any NoData pixel (dividing by 6 instead of 5) for F1/Precision/Recall.
+        present = cm.sum(1)[1:] > 0
+        res = {}
+        res["miou"]      = float(per["iou_class"][1:][present].mean())
+        res["f1"]        = float(per["f1_class"][1:][present].mean())
+        res["precision"] = float(per["precision_class"][1:][present].mean())
+        res["recall"]    = float(per["recall_class"][1:][present].mean())
+        res["accuracy"]  = res["recall"]   # acuracia macro (balanceada) = recall macro em multiclasse
         for mname, t in per.items():
             res[mname] = {str(i): float(t[i]) for i in range(1, n_classes)}
         res["support_class"] = {str(i): int(cm[i].sum()) for i in range(1, n_classes)}   # pixels validos por classe
-        # checagem interna: media das classes deve bater com o macro do torchmetrics
-        # (o macro do torchmetrics so conta classes presentes no alvo)
-        present = cm.sum(1)[1:] > 0
-        res["check_macro_diff"] = max(abs(float(per["iou_class"][1:][present].mean()) - res["miou"]),
-                                      abs(float(per["f1_class"][1:][present].mean()) - res["f1"]))
+        # diferenca vs o macro do torchmetrics (informativo; != 0 nas runs que predizem NoData)
+        res["macro_vs_torchmetrics"] = {k: tm_macro[k] - res[k] for k in ("miou", "f1", "precision", "recall", "accuracy")}
         res.update(run=name, phase=info["phase"], loss=info["loss"], arch=info["arch"], variant=info["variant"],
                    fold=int(info["fold"]), seed=int(info["seed"]), split=args.split, n_patches=len(ds),
                    checkpoint=os.path.relpath(ckpt_path, REPO), ckpt_epoch=int(ck.get("epoch", -1)),
@@ -161,7 +168,7 @@ def main():
             json.dump(res, f, indent=2)
         done += 1
         print(f"[ok] {name}: mIoU {res['miou']:.4f} F1 {res['f1']:.4f} (n={len(ds)}, {time.time()-t0:.0f}s, "
-              f"checagem macro vs classes: {res['check_macro_diff']:.1e}) -> {out_name}")
+              f"dif F1 vs torchmetrics: {res['macro_vs_torchmetrics']['f1']:+.1e}) -> {out_name}")
     print(f"concluido: {done} run(s) avaliada(s).")
 
 
