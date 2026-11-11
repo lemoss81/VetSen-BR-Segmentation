@@ -1,10 +1,10 @@
-# Ambiente / caches
+# Environment / caches
 .pixi/
 __pycache__/
 *.py[cod]
 .ipynb_checkpoints/
 
-# Saídas de treino (não versionar)
+# Training outputs (do not version)
 experiments/
 outputs/
 wandb/
@@ -14,7 +14,7 @@ multirun/
 lightning_logs/
 tb_logs/
 
-# Dados (ficam no SSD, NUNCA no git)
+# Data (kept on the SSD, NEVER in git)
 *.tif
 *.tiff
 *.jp2
@@ -22,14 +22,17 @@ tb_logs/
 dataset/
 data/
 
-# Stats recomputados (gerar na máquina)
+# Recomputed stats (generate on the machine)
 train_band_stats*.json
 
-# Preparo auxiliar (uso único, roda local/no SSD — fora do git)
+# One-off helpers (run locally / on the SSD — out of git)
 data_prep/rename_dataset.py
 data_prep/build_catalog.py
 
-# SO / editor
+# Kaggle packaging (out of the segmentation repo)
+kaggle/
+
+# OS / editor
 .DS_Store
 ._*
 Thumbs.db
