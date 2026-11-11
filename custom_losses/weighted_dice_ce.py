@@ -1,12 +1,11 @@
 """Vendored copy of WeightedDiceCrossEntropyLoss with `class_weights` support.
 
 The upstream pytorch_segmentation_models_trainer package (pinned in pixi.toml)
-does not expose `class_weights` on WeightedDiceCrossEntropyLoss -- that's a
-customization that only exists in the OLD_IP project's local/modified copy of
-the library. Rather than depend on a private fork, this module reproduces
-that one class locally so configs/loss/weighted_ce.yaml can target it
-directly. Everything else (dice/CE mix, smoothing, ignore_index) matches the
-upstream class exactly; only `class_weights` is added.
+does not expose `class_weights` on WeightedDiceCrossEntropyLoss. Rather than
+depend on a modified fork, this module reproduces that one class locally so
+configs/loss/weighted_ce.yaml can target it directly. Everything else (dice/CE
+mix, smoothing, ignore_index) matches the upstream class exactly; only
+`class_weights` is added.
 """
 import torch
 import torch.nn as nn

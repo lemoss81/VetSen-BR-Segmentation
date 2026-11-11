@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 """
 scripts/eval_test.py
-  Avalia o MELHOR checkpoint (menor loss/val) de cada run no split pedido (test por padrao)
-  e grava <run>/test_metrics.json -- que e o que scripts/aggregate_results.py le.
+  Evaluates the BEST checkpoint (lowest loss/val) of each run on the requested split
+  (test by default) and writes <run>/test_metrics.json -- the input of scripts/aggregate_results.py.
 
-  Metricas = as mesmas do treino: macro, ignore_index=0 (NoData), torchmetrics:
-  mIoU (JaccardIndex), F1, Precision, Recall, Accuracy + IoU por classe (1..5).
-  Pre-processamento = o do val_dataset do configs/base_vetsenbr.yaml (ToFloat + Normalize),
-  sem augmentation. Inferencia em fp32, patch a patch (256x256), sem janela deslizante.
+  Metrics = same as training: macro, ignore_index=0 (NoData), torchmetrics:
+  mIoU (JaccardIndex), F1, Precision, Recall, Accuracy + per-class IoU (1..5).
+  Preprocessing = the val_dataset of configs/base_vetsenbr.yaml (ToFloat + Normalize),
+  no augmentation. Inference in fp32, patch by patch (256x256), no sliding window.
 
-  Uso (a partir da raiz do repo, via pixi):
+  Usage (from the repo root, via pixi):
     pixi run python scripts/eval_test.py --ds-root <DS_ROOT> \
         --runs "experiments/r2_*" "experiments/r1_dice_focal_*"
-    # checagem de reproducao (deve bater com o val do treino):
+    # reproduction check (should match the training val):
     pixi run python scripts/eval_test.py --ds-root <DS_ROOT> --split val --device cpu \
         --runs experiments/r1_dice_focal_Unet_fold0_seed42
 """
@@ -68,13 +68,13 @@ def build_model(arch, in_ch, n_classes):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--ds-root", required=True)
-    ap.add_argument("--runs", nargs="+", required=True, help="globs de pastas de run (relativas a raiz do repo)")
+    ap.add_argument("--runs", nargs="+", required=True, help="globs of run folders (relative to the repo root)")
     ap.add_argument("--split", default="test", choices=["test", "val"])
     ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
-    ap.add_argument("--threads", type=int, default=0, help="torch.set_num_threads (0 = padrao)")
+    ap.add_argument("--threads", type=int, default=0, help="torch.set_num_threads (0 = default)")
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--batch-size", type=int, default=32)
-    ap.add_argument("--max-patches", type=int, default=0, help="DEBUG: limita patches; grava *_DEBUG.json")
+    ap.add_argument("--max-patches", type=int, default=0, help="DEBUG: limit patches; writes *_DEBUG.json")
     ap.add_argument("--overwrite", action="store_true")
     args = ap.parse_args()
 
@@ -100,13 +100,13 @@ def main():
         if not m:
             continue
         info = m.groupdict()
-        info["variant"] = info["variant"] or "forest_nonforest"   # r1 so rodou forest_nonforest
+        info["variant"] = info["variant"] or "forest_nonforest"   # r1 only ran forest_nonforest
         out_path = os.path.join(d, out_name)
         if os.path.exists(out_path) and not args.overwrite:
-            print(f"[pula] {name} (ja existe {out_name})"); continue
+            print(f"[skip] {name} ({out_name} already exists)"); continue
         ckpts = [c for c in glob.glob(os.path.join(d, "checkpoints", "best-*.ckpt"))]
         if not ckpts:
-            print(f"[sem checkpoint] {name}"); continue
+            print(f"[no checkpoint] {name}"); continue
         ckpt_path = sorted(ckpts)[-1]
         t0 = time.time()
         ck = torch.load(ckpt_path, map_location="cpu", weights_only=False)
@@ -127,18 +127,18 @@ def main():
                  "accuracy": tm.Accuracy(average="macro", **kw)}
         for v in macro.values():
             v.to(args.device)
-        cm = torch.zeros(n_classes, n_classes, dtype=torch.long, device=args.device)   # linhas = alvo, colunas = predicao
+        cm = torch.zeros(n_classes, n_classes, dtype=torch.long, device=args.device)   # rows = target, cols = prediction
         with torch.no_grad():
             for x, y in dl:
                 x, y = x.to(args.device).float(), y.to(args.device)
                 pred = model(x).argmax(dim=1)
                 for v in macro.values():
                     v.update(pred, y)
-                valid = y != 0                                  # NoData fora, como ignore_index=0
+                valid = y != 0                                  # drop NoData, matching ignore_index=0
                 idx = y[valid] * n_classes + pred[valid]
                 cm += torch.bincount(idx, minlength=n_classes ** 2).view(n_classes, n_classes)
-        tm_macro = {k: float(v.compute()) for k, v in macro.items()}   # macro do torchmetrics (referencia)
-        # metricas por classe (1..5) a partir da matriz de confusao acumulada globalmente
+        tm_macro = {k: float(v.compute()) for k, v in macro.items()}   # torchmetrics macro (reference)
+        # per-class metrics (1..5) from the globally accumulated confusion matrix
         tp = cm.diag().double()
         fn = cm.sum(1).double() - tp
         fp = cm.sum(0).double() - tp
@@ -154,11 +154,11 @@ def main():
         res["f1"]        = float(per["f1_class"][1:][present].mean())
         res["precision"] = float(per["precision_class"][1:][present].mean())
         res["recall"]    = float(per["recall_class"][1:][present].mean())
-        res["accuracy"]  = res["recall"]   # acuracia macro (balanceada) = recall macro em multiclasse
+        res["accuracy"]  = res["recall"]   # macro (balanced) accuracy = macro recall in the multiclass case
         for mname, t in per.items():
             res[mname] = {str(i): float(t[i]) for i in range(1, n_classes)}
-        res["support_class"] = {str(i): int(cm[i].sum()) for i in range(1, n_classes)}   # pixels validos por classe
-        # diferenca vs o macro do torchmetrics (informativo; != 0 nas runs que predizem NoData)
+        res["support_class"] = {str(i): int(cm[i].sum()) for i in range(1, n_classes)}   # valid pixels per class
+        # difference vs the torchmetrics macro (informative; != 0 for runs that predict NoData)
         res["macro_vs_torchmetrics"] = {k: tm_macro[k] - res[k] for k in ("miou", "f1", "precision", "recall", "accuracy")}
         res.update(run=name, phase=info["phase"], loss=info["loss"], arch=info["arch"], variant=info["variant"],
                    fold=int(info["fold"]), seed=int(info["seed"]), split=args.split, n_patches=len(ds),
@@ -169,7 +169,7 @@ def main():
         done += 1
         print(f"[ok] {name}: mIoU {res['miou']:.4f} F1 {res['f1']:.4f} (n={len(ds)}, {time.time()-t0:.0f}s, "
               f"dif F1 vs torchmetrics: {res['macro_vs_torchmetrics']['f1']:+.1e}) -> {out_name}")
-    print(f"concluido: {done} run(s) avaliada(s).")
+    print(f"done: {done} run(s) evaluated.")
 
 
 if __name__ == "__main__":

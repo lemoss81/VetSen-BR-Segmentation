@@ -1,21 +1,21 @@
 # -*- coding: utf-8 -*-
 r"""
 scripts/aggregate_results.py
-  Agrega as metricas por run (media +- desvio) e compara variantes / arquiteturas com teste pareado
-  (Wilcoxon se >= 6 pares, senao t pareado). Le <run>/test_metrics.json, gerado por scripts/eval_test.py.
-  Metricas globais (macro) e POR CLASSE (IoU, F1, precisao, recall das classes 1..5).
+  Aggregates the per-run metrics (mean +- s.d.) and compares variants / architectures with a paired
+  test (Wilcoxon if >= 6 pairs, otherwise paired t-test). Reads <run>/test_metrics.json, produced by
+  scripts/eval_test.py. Global (macro) and PER-CLASS metrics (IoU, F1, precision, recall for classes 1..5).
 
-  A celula forest_nonforest/seed 42 da Run 2 vem das runs da Run 1 (mesma loss e config):
-  inclua as duas familias de pastas. Desvio = amostral (ddof=1).
-  Nomes das classes (VetSen-BR-dataset, classificador_vetores_EDGV.py): 1 Water, 2 Built-up, 5 Barren Land
-  em ambas as variantes; 3/4 = Forest/Non-forest (forest_nonforest) ou Natural/Cultivated (natural_cultivated).
-  Entre variantes, a comparacao por classe so e feita nas classes comuns (1, 2, 5); 3 e 4 mudam de significado.
+  The forest_nonforest/seed 42 cell of Run 2 comes from the Run 1 runs (same loss and config):
+  include both folder families. Standard deviation = sample (ddof=1).
+  Class names: 1 Water, 2 Built-up, 5 Barren Land in both variants;
+  3/4 = Forest/Non-forest (forest_nonforest) or Natural/Cultivated (natural_cultivated).
+  Across variants, the per-class comparison is done only on the shared classes (1, 2, 5); 3 and 4 change meaning.
 
-  Run 2 (principal):
+  Run 2 (main):
     python scripts/aggregate_results.py --glob "experiments/r2_*" --glob "experiments/r1_dice_focal_*" \
         --loss dice_focal --compare-variants --compare-archs --out experiments/resultado_final
 
-  Run 1 (ranking das losses; use --split-file val_check_metrics.json se avaliou na validacao):
+  Run 1 (loss ranking; use --split-file val_check_metrics.json if you evaluated on validation):
     python scripts/aggregate_results.py --glob "experiments/r1_*" --by-loss --split-file val_check_metrics.json
 
 """
@@ -42,7 +42,7 @@ def load_rows(globs, default_loss, split_file):
                 continue
             r = json.load(open(f, encoding="utf-8"))
             if not r.get("loss"):
-                r["loss"] = default_loss          # runs r2_* nao trazem a loss no nome
+                r["loss"] = default_loss          # r2_* runs don't carry the loss in the name
             rows.append(r)
     return rows
 
@@ -55,9 +55,9 @@ def paired(a, b, label_a, label_b, ss):
     keys = sorted(set(a) & set(b))
     da, db = [a[k] for k in keys], [b[k] for k in keys]
     if len(keys) < 2:
-        return f"n pares insuficiente ({len(keys)})"
+        return f"insufficient pairs ({len(keys)})"
     if all(x == y for x, y in zip(da, db)):
-        return f"n={len(keys)} | valores identicos"
+        return f"n={len(keys)} | identical values"
     if len(keys) >= 6:
         _, p = ss.wilcoxon(da, db); t = "Wilcoxon"
     else:
@@ -67,13 +67,13 @@ def paired(a, b, label_a, label_b, ss):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--glob", action="append", required=True, help="glob de pastas de run (repetivel)")
-    ap.add_argument("--loss", default="dice_focal", help="loss das runs r2_* e filtro (ignorado com --by-loss)")
+    ap.add_argument("--glob", action="append", required=True, help="glob of run folders (repeatable)")
+    ap.add_argument("--loss", default="dice_focal", help="loss for r2_* runs and filter (ignored with --by-loss)")
     ap.add_argument("--split-file", default="test_metrics.json")
     ap.add_argument("--by-loss", action="store_true")
     ap.add_argument("--compare-variants", action="store_true")
     ap.add_argument("--compare-archs", action="store_true")
-    ap.add_argument("--out", default=None, help="prefixo de saida: <out>_por_run.csv e <out>_resumo.csv")
+    ap.add_argument("--out", default=None, help="output prefix: <out>_por_run.csv and <out>_resumo.csv")
     args = ap.parse_args()
 
     def nm(variant, c):
@@ -83,8 +83,8 @@ def main():
     if not args.by_loss:
         rows = [r for r in rows if r["loss"] == args.loss]
     if not rows:
-        print(f"nenhuma run com {args.split_file} (rode scripts/eval_test.py antes)."); return
-    print(f"{len(rows)} run(s) lidas ({args.split_file}).")
+        print(f"no run with {args.split_file} (run scripts/eval_test.py first)."); return
+    print(f"{len(rows)} run(s) read ({args.split_file}).")
 
     key = (lambda r: (r["loss"], r["arch"], r["variant"])) if args.by_loss else (lambda r: (r["arch"], r["variant"]))
     cells = defaultdict(list)
@@ -94,7 +94,7 @@ def main():
     def cls_vals(rs, field, c):
         return [x[field][c] for x in rs if c in x.get(field, {})]
 
-    print("\n== media +- desvio por celula ==")
+    print("\n== mean +- s.d. per cell ==")
     summary = []
     for k, rs in sorted(cells.items()):
         m = {n: [x[n] for x in rs] for n in ("miou", "f1", "precision", "recall", "accuracy")}
@@ -111,20 +111,20 @@ def main():
                     parts.append(f"{nm(variant, c)}={st.mean(v):.3f}+-{sd(v):.3f}")
                     row[f"{lab}_c{c}_mean"] = st.mean(v); row[f"{lab}_c{c}_std"] = sd(v)
             if parts:
-                print(f"   {lab:>3} por classe: " + "  ".join(parts))
+                print(f"   {lab:>3} per class: " + "  ".join(parts))
         summary.append(row)
 
     if args.compare_variants or args.compare_archs:
         import scipy.stats as ss
     if args.compare_variants:
-        print("\n== variantes (pareado por arquitetura, fold, seed; mIoU e classes comuns 1, 2, 5) ==")
+        print("\n== variants (paired by architecture, fold, seed; mIoU and shared classes 1, 2, 5) ==")
         for arch in sorted({r["arch"] for r in rows}):
             def pickv(v, f, arch=arch):
                 return {(r["fold"], r["seed"]): f(r) for r in rows if r["arch"] == arch and r["variant"] == v}
             print(f"  {arch}:")
             print("    mIoU          : " + paired(pickv("forest_nonforest", lambda r: r["miou"]),
                                                   pickv("natural_cultivated", lambda r: r["miou"]), "FNF", "NC", ss))
-            for field, lab in PER_CLASS[:2]:                      # IoU e F1 nas classes comuns
+            for field, lab in PER_CLASS[:2]:                      # IoU and F1 on the shared classes
                 for c in SHARED:
                     fa = lambda r, field=field, c=c: r.get(field, {}).get(c)
                     a = {k: x for k, x in pickv("forest_nonforest", fa).items() if x is not None}
@@ -132,13 +132,13 @@ def main():
                     if a and b:
                         print(f"    {lab:>3} {nm('forest_nonforest', c):<10}: " + paired(a, b, "FNF", "NC", ss))
     if args.compare_archs:
-        print("\n== arquiteturas (pareado por variante, fold, seed) ==")
+        print("\n== architectures (paired by variant, fold, seed) ==")
         for v in sorted({r["variant"] for r in rows}):
             def pick(arch, f):
                 return {(r["fold"], r["seed"]): f(r) for r in rows if r["variant"] == v and r["arch"] == arch}
             print(f"  {v}:")
             print("    mIoU        : " + paired(pick("Unet", lambda r: r["miou"]), pick("DeepLabV3Plus", lambda r: r["miou"]), "U-Net", "DeepLabV3+", ss))
-            for field, lab in PER_CLASS[:2]:                      # IoU e F1 por classe
+            for field, lab in PER_CLASS[:2]:                      # IoU and F1 per class
                 for c in CLASSES:
                     fa = lambda r, field=field, c=c: r.get(field, {}).get(c)
                     a = {k: x for k, x in pick("Unet", fa).items() if x is not None}
@@ -157,7 +157,7 @@ def main():
         with open(args.out + "_resumo.csv", "w", newline="", encoding="utf-8") as f:
             w = csv.DictWriter(f, fieldnames=sorted({k for s in summary for k in s}))
             w.writeheader(); w.writerows(summary)
-        print(f"\ngravado: {args.out}_por_run.csv e {args.out}_resumo.csv")
+        print(f"\nwritten: {args.out}_por_run.csv and {args.out}_resumo.csv")
 
 
 if __name__ == "__main__":

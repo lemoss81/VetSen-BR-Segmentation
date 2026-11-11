@@ -28,7 +28,7 @@ model:
 
 optimizer:
   _target_: torch.optim.AdamW
-  lr: 1.6e-4  # auto-atualizado apos sweep_lr_bs128 -- vencedor: 1.6e-4 (mIoU_val=0.5048)
+  lr: 1.6e-4  # selected by the learning-rate / batch-size sweep
   weight_decay: 0.0001
   eps: 1.0e-8
 
@@ -45,7 +45,7 @@ scheduler_list:
     name: plateau_lr
 
 hyperparameters:
-  batch_size: 128  # auto-atualizado apos sweep_lr_bs128 (venceu 128 por VRAM/utilizacao)
+  batch_size: 128  # selected by the learning-rate / batch-size sweep
   epochs: 300
   classes: 6
 
@@ -53,7 +53,7 @@ pl_trainer:
   max_epochs: ${hyperparameters.epochs}
   accelerator: auto
   devices: 1
-  precision: 16-mixed          # 5090: can switch to bf16-mixed
+  precision: 16-mixed          # can switch to bf16-mixed
   log_every_n_steps: 50
   # "warn" (not true): train.py does setdefault("deterministic", True) when
   # deterministic_cudnn=true, so this pre-set value is respected. Strict True crashes
@@ -142,7 +142,7 @@ train_dataset:
     - _target_: albumentations.pytorch.ToTensorV2
   data_loader:
     shuffle: true
-    num_workers: 10  # medido na Run 1: 8 workers = 34 s/epoca e sem erro 1455; 16 = 40 s/epoca e caiu na epoca 94
+    num_workers: 12
     pin_memory: true
     persistent_workers: true
     batch_size: ${hyperparameters.batch_size}
@@ -167,7 +167,7 @@ val_dataset:
     - _target_: albumentations.pytorch.ToTensorV2
   data_loader:
     shuffle: false
-    num_workers: 8  # medido na Run 1: 8 workers = 34 s/epoca e sem erro 1455; 16 = 40 s/epoca e caiu na epoca 94
+    num_workers: 12
     pin_memory: true
     persistent_workers: true
     batch_size: ${hyperparameters.batch_size}
