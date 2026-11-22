@@ -3,7 +3,7 @@
 #   pytorch-smt --config-dir configs --config-name base_vetsenbr <overrides...>
 #
 # Overrides por run (os scripts de screening montam tudo):
-#   paths.ds_root=<DS_ROOT> variant=<v> fold=<f> seed=<s>
+#   paths.ds_root=<DS_ROOT> variant=<v> fold=f<f> seed=<s>
 #   total_iters=<T> warmup_iters=<W> loss=<nome> model._target_=...
 #
 # 'fold' e um GRUPO (configs/fold/<f>.yaml), nao um numero solto: o arquivo traz o
@@ -26,7 +26,8 @@
 defaults:
   - loss: dice_focal          # configs/loss/: dice_focal|focal|dice|dice_ce|ce|weighted_ce_<variante>_fold<f>
   - variant: forest_nonforest # configs/variant/: forest_nonforest|natural_cultivated
-  - fold: 0                   # configs/fold/: 0..4 - traz o numero do fold E as band stats dele
+  - fold: f0                  # configs/fold/: f0..f4 - traz o numero do fold E as band stats dele
+                              # o prefixo "f" e obrigatorio: Hydra recusa int em defaults e em override de grupo
   - _self_
   # _self_ vem por ultimo, entao nao defina 'fold', 'band_mean' nem 'band_std' abaixo:
   # isso sobreporia o grupo e reintroduziria a divergencia que ele existe para impedir.

@@ -49,9 +49,11 @@ def main():
     print("\n== 1. config do Hydra resolve ==")
     with initialize_config_dir(config_dir=os.path.join(REPO, "configs"), version_base=None):
         cfg = compose(config_name="base_vetsenbr", overrides=[
-            "paths.ds_root=%s" % args.ds_root,
+            # ${hydra:runtime.cwd} so resolve sob o pytorch-smt; aqui informamos o valor
+            "paths.repo=%s" % REPO.replace("\\", "/"),
+            "paths.ds_root=%s" % args.ds_root.replace("\\", "/"),
             "variant=%s" % args.variant,
-            "fold=%d" % args.fold,          # grupo: traz o numero do fold E as band stats dele
+            "fold=f%d" % args.fold,         # grupo f0..f4: traz o numero do fold E as band stats dele
             "model._target_=segmentation_models_pytorch.%s" % args.arch,
             "model.encoder_name=%s" % ENCODER[args.arch],
         ])
@@ -209,7 +211,7 @@ def main():
 Falta confirmar num run curto de 2 epocas:
 
   pixi run pytorch-smt --config-dir configs --config-name base_vetsenbr \\
-    paths.ds_root=%s variant=%s fold=%d \\
+    paths.ds_root=%s variant=%s fold=f%d \\
     hyperparameters.epochs=2 total_iters=%d warmup_iters=%d run_name=smoke
 
   1) a chave do monitor existe:  procure "MulticlassJaccardIndex/val" nos escalares do

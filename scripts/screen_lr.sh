@@ -20,6 +20,9 @@
 # =============================================================================
 set -euo pipefail
 export PYTHONPATH=.        # custom_losses.* e custom_sched.* resolvidos pelo Hydra
+export WANDB_MODE=offline  # sem isso o wandb ABRE UM PROMPT de login a cada run e trava o lote.
+                           # 'offline' grava em experiments/wandb/ e pode ser sincronizado depois
+                           # (wandb sync); use 'disabled' para nao gravar nada.
 
 DS_ROOT="${1:?uso: screen_lr.sh <DS_ROOT>}"
 SEED="${SEED:-42}"
@@ -83,7 +86,7 @@ for arch in "${ARCHS[@]}"; do
 
           pytorch-smt --config-dir configs --config-name base_vetsenbr \
             paths.ds_root="$DS_ROOT" \
-            variant="$v" fold="$f" seed="$SEED" \
+            variant="$v" fold="f${f}" seed="$SEED" \
             loss="$LOSS_ARG" \
             model._target_="segmentation_models_pytorch.${arch}" \
             model.encoder_name="$ENC" \

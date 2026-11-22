@@ -1,0 +1,11 @@
+# @package _global_
+# Fold 3: o numero do fold E as estatisticas de banda do train DESTE fold,
+# no mesmo arquivo — e impossivel usar o fold de um e a normalizacao de outro.
+# Ordem = selected_bands [3,2,1,4,5,6,7,8,9,10] = B04, B03, B02, B08, B05, B06, B07, B8A, B11, B12
+# Escala [0,1] (DN/65535), para albumentations.Normalize apos ToFloat(65535).
+# Valores em repr() do float: fazem round-trip exato com splits/band_stats/fold3.json.
+# Gerado desse JSON — nao editar a mao.
+fold: 3
+n_train: 6426
+band_mean: [0.02437335352977769, 0.024807479372637678, 0.02090927132081327, 0.05757642480515287, 0.03214600757428754, 0.05006410739948614, 0.056205150035440826, 0.06017655135998186, 0.047774510664921124, 0.03436073695032861]
+band_std:  [0.0066330213561825125, 0.004412376571822112, 0.0035509718576909387, 0.012450802275259912, 0.006582318973663938, 0.009263815663829009, 0.011489124415463124, 0.012115397999812571, 0.012227388501954829, 0.010701884549436004]

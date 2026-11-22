@@ -25,6 +25,9 @@ data/
 # Recomputed stats (generate on the machine)
 train_band_stats*.json
 
+# Dataset loader caches, written next to the split CSVs
+*.cache.parquet
+
 # One-off helpers (run locally / on the SSD — out of git)
 data_prep/rename_dataset.py
 data_prep/build_catalog.py
