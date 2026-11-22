@@ -1,4 +1,5 @@
 # @package _global_
+# Sem ignore_index: classes 5 (0..4) e a classe 0 e Water, nao NoData.
 # 0.25*Dice + 0.75*CE (label smoothing 0.1)
 loss:
   _target_: pytorch_segmentation_models_trainer.custom_losses.loss.WeightedDiceCrossEntropyLoss
@@ -6,4 +7,3 @@ loss:
   dice_weight: 0.25
   ce_weight: 0.75
   smooth_factor: 0.1
-  ignore_index: 0

@@ -1,0 +1,16 @@
+# @package _global_
+# Variante FISIONOMICA, derivada de labels/subclasses na leitura (ver splits/csv_derived/README.md).
+# As classes ja saem 0..4: a classe 0 e Water, NAO e NoData — nao existe ignore_index.
+variant: forest_nonforest
+class_names: [Water, Built-up, Forest, Non-forest, Barren Land]
+mask_class_mapping:
+  1: 0    # Water          -> Water
+  2: 1    # Built-up       -> Built-up
+  3: 2    # Natural forest -> Forest
+  4: 2    # Savanna        -> Forest
+  5: 3    # Grassland      -> Non-forest
+  6: 3    # Wetland        -> Non-forest
+  7: 2    # Silviculture   -> Forest
+  8: 3    # Cropland       -> Non-forest
+  9: 4    # Bare soil      -> Barren Land
+  10: 4   # Rock           -> Barren Land

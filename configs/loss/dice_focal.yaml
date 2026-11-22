@@ -1,4 +1,5 @@
 # @package _global_
+# Sem ignore_index: classes 5 (0..4) e a classe 0 e Water, nao NoData.
 # 0.25*Dice + 0.75*Focal (gamma=2) — ablation winner
 loss_params:
   compound_loss:
@@ -7,10 +8,8 @@ loss_params:
       - loss:
           _target_: segmentation_models_pytorch.losses.DiceLoss
           mode: multiclass
-          ignore_index: 0
         weight: 0.25
       - loss:
           _target_: segmentation_models_pytorch.losses.FocalLoss
           mode: multiclass
-          ignore_index: 0
         weight: 0.75

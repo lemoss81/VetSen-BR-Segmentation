@@ -22,10 +22,12 @@ scripts/aggregate_results.py
 import argparse, csv, glob, json, os, statistics as st
 from collections import defaultdict
 
-CLASSES = ["1", "2", "3", "4", "5"]
-NAMES = {"forest_nonforest": {"1": "Water", "2": "Built-up", "3": "Forest", "4": "Non-forest", "5": "Barren"},
-         "natural_cultivated": {"1": "Water", "2": "Built-up", "3": "Natural", "4": "Cultivated", "5": "Barren"}}
-SHARED = ["1", "2", "5"]
+# Classes 0..4 (protocolo de classes 5). A classe 0 e Water, nao NoData:
+# o dataset nao tem nenhum pixel NoData e nao existe ignore_index.
+CLASSES = ["0", "1", "2", "3", "4"]
+NAMES = {"forest_nonforest": {"0": "Water", "1": "Built-up", "2": "Forest", "3": "Non-forest", "4": "Barren"},
+         "natural_cultivated": {"0": "Water", "1": "Built-up", "2": "Natural", "3": "Cultivated", "4": "Barren"}}
+SHARED = ["0", "1", "4"]   # Water, Built-up e Barren sao as mesmas nas duas variantes
 PER_CLASS = [("iou_class", "IoU"), ("f1_class", "F1"), ("precision_class", "P"), ("recall_class", "R")]
 
 
@@ -69,8 +71,10 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--glob", action="append", required=True, help="glob of run folders (repeatable)")
     ap.add_argument("--loss", default="dice_focal", help="loss for r2_* runs and filter (ignored with --by-loss)")
-    ap.add_argument("--split-file", default="test_metrics.json")
+    ap.add_argument("--split-file", default="val_check_metrics.json",
+                    help="val_check_metrics.json (screening) ou test_metrics.json (estudo principal)")
     ap.add_argument("--by-loss", action="store_true")
+    ap.add_argument("--by-lr", action="store_true", help="separa as celulas tambem por learning rate")
     ap.add_argument("--compare-variants", action="store_true")
     ap.add_argument("--compare-archs", action="store_true")
     ap.add_argument("--out", default=None, help="output prefix: <out>_por_run.csv and <out>_resumo.csv")
@@ -86,7 +90,8 @@ def main():
         print(f"no run with {args.split_file} (run scripts/eval_test.py first)."); return
     print(f"{len(rows)} run(s) read ({args.split_file}).")
 
-    key = (lambda r: (r["loss"], r["arch"], r["variant"])) if args.by_loss else (lambda r: (r["arch"], r["variant"]))
+    campos = (["loss"] if args.by_loss else []) + (["lr"] if args.by_lr else []) + ["arch", "variant"]
+    key = lambda r: tuple(str(r.get(c)) for c in campos)
     cells = defaultdict(list)
     for r in rows:
         cells[key(r)].append(r)
@@ -101,7 +106,7 @@ def main():
         tag = " ".join(f"{x:<14}" for x in k)
         variant = k[-1]
         print(f"{tag} n={len(rs):2} | mIoU {fmt(m['miou'])} | F1 {fmt(m['f1'])} | P {fmt(m['precision'])} | R {fmt(m['recall'])}")
-        row = dict(zip(("loss", "arch", "variant") if args.by_loss else ("arch", "variant"), k), n=len(rs),
+        row = dict(zip(campos, k), n=len(rs),
                    **{f"{n}_mean": st.mean(v) for n, v in m.items()}, **{f"{n}_std": sd(v) for n, v in m.items()})
         for field, lab in PER_CLASS:
             parts = []

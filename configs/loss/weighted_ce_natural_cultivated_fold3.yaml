@@ -1,0 +1,13 @@
+# @package _global_
+# Weighted CE (label smoothing 0.1) — pesos do TRAIN do fold 3 de natural_cultivated.
+# Inverso da raiz da frequencia, normalizado pela media. Rotulos remapeados 1..5 -> 0..4,
+# entao sao 5 pesos e NAO existe ignore_index (a classe 0 e Water, nao NoData).
+# ordem: 0=Water, 1=Built-up, 2=Natural, 3=Cultivated, 4=Barren
+# frequencias (% do train): Water=2.1917, Built-up=4.3754, Natural=56.1321, Cultivated=36.7889, Barren=0.5119
+loss:
+  _target_: custom_losses.weighted_dice_ce.WeightedDiceCrossEntropyLoss
+  num_classes: ${hyperparameters.classes}
+  dice_weight: 0.0
+  ce_weight: 1.0
+  smooth_factor: 0.1
+  class_weights: [1.185208, 0.838836, 0.234196, 0.289286, 2.452474]

@@ -1,0 +1,16 @@
+# @package _global_
+# Variante por ANTROPIZACAO, derivada de labels/subclasses na leitura.
+# Verificado: derivar por LUT reproduz as mascaras publicadas com 0 pixels de diferenca.
+variant: natural_cultivated
+class_names: [Water, Built-up, Natural, Cultivated, Barren Land]
+mask_class_mapping:
+  1: 0    # Water          -> Water
+  2: 1    # Built-up       -> Built-up
+  3: 2    # Natural forest -> Natural
+  4: 2    # Savanna        -> Natural
+  5: 2    # Grassland      -> Natural
+  6: 2    # Wetland        -> Natural
+  7: 3    # Silviculture   -> Cultivated
+  8: 3    # Cropland       -> Cultivated
+  9: 4    # Bare soil      -> Barren Land
+  10: 4   # Rock           -> Barren Land
